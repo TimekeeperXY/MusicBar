@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="MusicBar"
-        Width="560" Height="48"
-        MinWidth="440" MaxWidth="680"
+        Width="484" Height="48"
+        MinWidth="400" MaxWidth="604"
         WindowStyle="None"
         ResizeMode="NoResize"
         AllowsTransparency="True"
@@ -198,10 +198,6 @@
                 </Button>
                 <Button Style="{StaticResource ControlButton}" Content="&#xE893;" Command="{Binding NextCommand}"
                         IsEnabled="{Binding CanNext}" ToolTip="下一首" />
-                <Button Style="{StaticResource ControlButton}" Content="{Binding RepeatGlyph}"
-                        Command="{Binding CycleRepeatCommand}" IsEnabled="{Binding CanRepeat}" ToolTip="切换循环模式" />
-                <Button Style="{StaticResource ControlButton}" Content="&#xE734;" IsEnabled="False"
-                        ToolTip="收藏将在播放器适配版中提供" />
             </StackPanel>
         </Grid>
         <Border.ContextMenu>

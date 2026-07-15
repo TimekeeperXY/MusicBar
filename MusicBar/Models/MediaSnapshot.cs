@@ -1,5 +1,4 @@
 using System.Windows.Media;
-using Windows.Media;
 
 namespace MusicBar.Models;
 
@@ -15,15 +14,10 @@ public sealed record MediaSnapshot(
     bool CanPause,
     bool CanPrevious,
     bool CanNext,
-    bool CanRepeat,
-    bool CanShuffle,
-    MediaPlaybackAutoRepeatMode RepeatMode,
-    bool? IsShuffleActive,
     TimeSpan Position,
     TimeSpan Duration)
 {
     public static MediaSnapshot Empty { get; } = new(
         false, "等待音乐播放", "打开任意支持系统媒体控制的播放器", string.Empty, string.Empty,
-        null, false, false, false, false, false, false, false,
-        MediaPlaybackAutoRepeatMode.None, null, TimeSpan.Zero, TimeSpan.Zero);
+        null, false, false, false, false, false, TimeSpan.Zero, TimeSpan.Zero);
 }

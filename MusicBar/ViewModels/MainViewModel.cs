@@ -5,7 +5,6 @@ using MusicBar.Services;
 using MusicBar.Services.Lyrics;
 using System.Windows;
 using System.Windows.Media;
-using Windows.Media;
 
 namespace MusicBar.ViewModels;
 
@@ -24,11 +23,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string currentLyric = "右键可加载本地 LRC 歌词";
     [ObservableProperty] private ImageSource? artwork;
     [ObservableProperty] private string playPauseGlyph = "\uE768";
-    [ObservableProperty] private string repeatGlyph = "\uE8EE";
     [ObservableProperty] private bool canTogglePlayback;
     [ObservableProperty] private bool canPrevious;
     [ObservableProperty] private bool canNext;
-    [ObservableProperty] private bool canRepeat;
     [ObservableProperty] private bool hasMediaSession;
     [ObservableProperty] private bool hasInstalledPlayers;
     [ObservableProperty] private string launcherHint = "正在检测播放器…";
@@ -37,7 +34,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public IAsyncRelayCommand TogglePlayPauseCommand { get; }
     public IAsyncRelayCommand PreviousCommand { get; }
     public IAsyncRelayCommand NextCommand { get; }
-    public IAsyncRelayCommand CycleRepeatCommand { get; }
     public IAsyncRelayCommand<InstalledMusicPlayer> LaunchPlayerCommand { get; }
 
     public MainViewModel()
@@ -52,7 +48,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         TogglePlayPauseCommand = new AsyncRelayCommand(_media.TogglePlayPauseAsync, () => CanTogglePlayback);
         PreviousCommand = new AsyncRelayCommand(_media.PreviousAsync, () => CanPrevious);
         NextCommand = new AsyncRelayCommand(_media.NextAsync, () => CanNext);
-        CycleRepeatCommand = new AsyncRelayCommand(_media.CycleRepeatAsync, () => CanRepeat);
         LaunchPlayerCommand = new AsyncRelayCommand<InstalledMusicPlayer>(LaunchPlayerAsync);
         _media.SnapshotChanged += OnSnapshotChanged;
         _lyrics.StateChanged += OnLyricsStateChanged;
@@ -146,11 +141,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             : snapshot.Artist;
         Artwork = snapshot.Artwork;
         PlayPauseGlyph = snapshot.IsPlaying ? "\uE769" : "\uE768";
-        RepeatGlyph = snapshot.RepeatMode == MediaPlaybackAutoRepeatMode.Track ? "1" : "\uE8EE";
         CanTogglePlayback = snapshot.HasSession && (snapshot.CanPlay || snapshot.CanPause);
         CanPrevious = snapshot.CanPrevious;
         CanNext = snapshot.CanNext;
-        CanRepeat = snapshot.CanRepeat;
         _latestPosition = snapshot.Position;
         if (snapshot.HasSession)
         {
@@ -168,7 +161,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         TogglePlayPauseCommand.NotifyCanExecuteChanged();
         PreviousCommand.NotifyCanExecuteChanged();
         NextCommand.NotifyCanExecuteChanged();
-        CycleRepeatCommand.NotifyCanExecuteChanged();
     }
 
     private void OnLyricsStateChanged(object? sender, EventArgs e)

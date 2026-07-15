@@ -2,7 +2,6 @@ using MusicBar.Models;
 using System.IO;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Windows.Media;
 using Windows.Media.Control;
 using Windows.Storage.Streams;
 
@@ -73,24 +72,6 @@ public sealed class MediaSessionService : IDisposable
         {
             await _session.TrySkipNextAsync();
         }
-    }
-
-    public async Task CycleRepeatAsync()
-    {
-        if (_session is null || !Current.CanRepeat)
-        {
-            return;
-        }
-
-        var next = Current.RepeatMode switch
-        {
-            MediaPlaybackAutoRepeatMode.None => MediaPlaybackAutoRepeatMode.List,
-            MediaPlaybackAutoRepeatMode.List => MediaPlaybackAutoRepeatMode.Track,
-            _ => MediaPlaybackAutoRepeatMode.None
-        };
-
-        await _session.TryChangeAutoRepeatModeAsync(next);
-        await RefreshAsync();
     }
 
     public void CalibratePosition(TimeSpan actualPosition) =>
@@ -209,7 +190,6 @@ public sealed class MediaSessionService : IDisposable
                     isPlaying = nativeState.IsPlaying;
                 }
             }
-
             Publish(new MediaSnapshot(
                 true,
                 string.IsNullOrWhiteSpace(media.Title) ? "未知歌曲" : media.Title,
@@ -222,10 +202,6 @@ public sealed class MediaSessionService : IDisposable
                 controls.IsPauseEnabled || controls.IsPlayPauseToggleEnabled,
                 controls.IsPreviousEnabled,
                 controls.IsNextEnabled,
-                controls.IsRepeatEnabled,
-                controls.IsShuffleEnabled,
-                playback.AutoRepeatMode ?? MediaPlaybackAutoRepeatMode.None,
-                playback.IsShuffleActive,
                 position,
                 duration));
         }
@@ -334,10 +310,6 @@ public sealed class MediaSessionService : IDisposable
             false,
             false,
             false,
-            false,
-            false,
-            MediaPlaybackAutoRepeatMode.None,
-            null,
             position,
             duration));
         return true;

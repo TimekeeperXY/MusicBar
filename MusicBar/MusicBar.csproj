@@ -9,7 +9,7 @@
     <UseWPF>true</UseWPF>
     <AssemblyName>MusicBar</AssemblyName>
     <RootNamespace>MusicBar</RootNamespace>
-    <Version>0.2.0-alpha.13</Version>
+    <Version>0.2.0-alpha.14</Version>
     <ApplicationIcon>Assets\MusicBar.ico</ApplicationIcon>
     <Product>MusicBar</Product>
     <Description>Windows taskbar media controller</Description>
