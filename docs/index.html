@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#eef3f8">
+  <meta name="description" content="MusicBar 把歌曲信息、同步歌词和常用播放控制放进 Windows 任务栏，让听歌少一点打断。">
+  <meta property="og:title" content="MusicBar - 把音乐控制留在任务栏">
+  <meta property="og:description" content="不用反复切回播放器，随时看歌词、切歌和暂停。">
+  <meta property="og:image" content="assets/musicbar-taskbar-hero.jpg">
+  <title>MusicBar - 把音乐控制留在任务栏</title>
+  <link rel="icon" href="assets/musicbar-icon-256.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <header class="site-header">
+    <nav class="nav shell" aria-label="主导航">
+      <a class="brand" href="#top" aria-label="MusicBar 首页">
+        <img src="assets/musicbar-icon-256.png" alt="" width="40" height="40">
+        <span>MusicBar</span>
+      </a>
+      <div class="nav-links">
+        <a href="#pain">为什么需要</a>
+        <a href="#features">功能特点</a>
+        <a class="nav-download" href="https://github.com/TimekeeperXY/MusicBar/releases/latest">免费下载</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero shell" id="top">
+      <div class="hero-copy reveal">
+        <p class="eyebrow">专为 Windows 听歌体验而生</p>
+        <h1>听歌，不必来回切窗口</h1>
+        <p class="hero-lead">MusicBar 把歌曲、歌词和播放控制放进任务栏，音乐一直在手边。</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="https://github.com/TimekeeperXY/MusicBar/releases/download/v0.2.0-alpha.13/MusicBar-Setup-0.2.0-alpha.13-win-x64.exe">免费下载 Windows 版</a>
+          <a class="button button-secondary" href="https://github.com/TimekeeperXY/MusicBar">查看开源项目</a>
+        </div>
+      </div>
+      <figure class="hero-visual reveal">
+        <img src="assets/musicbar-taskbar-hero.jpg" alt="MusicBar 融入 Windows 任务栏并显示歌曲、歌词和播放按钮" width="1536" height="1024" fetchpriority="high">
+      </figure>
+    </section>
+
+    <section class="pain-section" id="pain">
+      <div class="shell pain-grid">
+        <div class="pain-title reveal">
+          <p>本来只是想切一首歌</p>
+          <h2>却总被播放器打断手头的事</h2>
+        </div>
+        <div class="pain-list reveal">
+          <article>
+            <span aria-hidden="true">切换</span>
+            <h3>窗口藏得太深</h3>
+            <p>工作、聊天或浏览网页时，为了暂停一下，还要先找到播放器。</p>
+          </article>
+          <article>
+            <span aria-hidden="true">歌词</span>
+            <h3>想看歌词要切走</h3>
+            <p>喜欢的一句刚唱过，等打开歌词页时，情绪已经被操作打断。</p>
+          </article>
+          <article>
+            <span aria-hidden="true">习惯</span>
+            <h3>每个播放器都不一样</h3>
+            <p>换个平台就要重新适应按钮位置，常用操作没有统一入口。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="answer-section shell reveal">
+      <div class="answer-copy">
+        <h2>让音乐停在顺手的位置</h2>
+        <p>MusicBar 融入任务栏，不抢屏幕，也不挡住工作。想看、想切、想暂停，抬手就能完成。</p>
+      </div>
+      <div class="answer-strip" aria-label="MusicBar 使用体验概览">
+        <span>不必找窗口</span>
+        <span>不必换习惯</span>
+        <span>不必错过歌词</span>
+      </div>
+    </section>
+
+    <section class="features-section" id="features">
+      <div class="shell">
+        <div class="section-heading reveal">
+          <h2>你只管听，剩下的交给 MusicBar</h2>
+          <p>从打开播放器到看歌词，每一个常用动作都变得更短。</p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature feature-large reveal">
+            <div class="feature-copy">
+              <h3>一眼看见正在播放什么</h3>
+              <p>歌名、歌手、平台和当前歌词集中显示，不用猜，也不用切回播放器确认。</p>
+            </div>
+            <div class="lyric-stage" aria-label="歌词显示示例">
+              <p class="track-line">阴天快乐　易家扬　网易云音乐</p>
+              <p class="lyric-line">听阴天说什么</p>
+              <div class="control-line" aria-hidden="true">
+                <span>上一首</span><strong>播放</strong><span>下一首</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="feature feature-blue reveal">
+            <h3>同步歌词，刚好唱到这一句</h3>
+            <p>歌词跟着音乐向前走，喜欢的一句始终清楚地留在眼前。</p>
+          </article>
+
+          <article class="feature feature-quiet reveal">
+            <h3>常用控制，不再绕路</h3>
+            <p>播放、暂停、上一首、下一首和循环模式，都在同一个顺手位置。</p>
+          </article>
+
+          <article class="feature feature-wide reveal">
+            <div>
+              <h3>换播放器，不换操作习惯</h3>
+              <p>网易云音乐、QQ音乐、汽水音乐、Spotify 和 Apple Music，都可以拥有一致的快捷体验。</p>
+            </div>
+            <p class="platform-line">网易云音乐　QQ音乐　汽水音乐　Spotify　Apple Music</p>
+          </article>
+
+          <article class="feature feature-launch reveal">
+            <h3>播放器没打开，也不用先去找</h3>
+            <p>MusicBar 会显示电脑里已有的音乐播放器。点一下图标，就能直接开始。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="closing shell reveal">
+      <img src="assets/musicbar-icon-256.png" alt="MusicBar 图标" width="96" height="96" loading="lazy">
+      <h2>少切一次窗口，多听完整一首歌</h2>
+      <p>免费下载 MusicBar，让每一次播放都更顺手。</p>
+      <a class="button button-primary" href="https://github.com/TimekeeperXY/MusicBar/releases/download/v0.2.0-alpha.13/MusicBar-Setup-0.2.0-alpha.13-win-x64.exe">下载 MusicBar</a>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell footer-inner">
+      <div class="brand footer-brand">
+        <img src="assets/musicbar-icon-256.png" alt="" width="32" height="32" loading="lazy">
+        <span>MusicBar</span>
+      </div>
+      <p>为 Windows 用户做的一块任务栏音乐控制器。</p>
+      <a href="https://github.com/TimekeeperXY/MusicBar">GitHub 开源项目</a>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
