@@ -1,0 +1,8 @@
+.vs/
+**/bin/
+**/obj/
+artifacts/
+debug.log
+*.log
+*.user
+*.suo
