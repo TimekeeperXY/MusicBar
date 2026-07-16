@@ -158,7 +158,7 @@ public sealed class LrclibLyricsProvider : ILyricsProvider
             BaseAddress = new Uri("https://lrclib.net/"),
             Timeout = TimeSpan.FromSeconds(12)
         };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("MusicBar/0.2.0-alpha (Windows)");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("MusicBar/1.0.0 (Windows)");
         return client;
     }
 

@@ -12,8 +12,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
 {
     private readonly MediaSessionService _media = new();
     private readonly MusicPlayerLauncherService _playerLauncher = new();
+    private readonly PlayerWindowToggleService _playerWindowToggle = new();
     private readonly LrcLyricsService _lrcParser = new();
     private readonly ManualLyricsProvider _manualLyrics = new();
+    private readonly QqMusicLyricsProvider _qqLyrics = new();
     private readonly CachedOnlineLyricsProvider _onlineLyrics;
     private readonly LyricsCoordinator _lyrics;
     private TimeSpan _latestPosition;
@@ -42,6 +44,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _lyrics = new LyricsCoordinator([
             _manualLyrics,
             new NeteaseLyricsProvider(),
+            _qqLyrics,
             new SodaLyricsProvider(),
             _onlineLyrics
         ]);
@@ -86,10 +89,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
             throw new InvalidOperationException("请先播放一首歌曲，再重新搜索在线歌词。");
 
         _onlineLyrics.Invalidate(track);
+        var minimumPriority = _onlineLyrics.Priority;
+        if (_qqLyrics.CanHandle(track))
+        {
+            _qqLyrics.Invalidate(track);
+            minimumPriority = _qqLyrics.Priority;
+        }
         await _lyrics.UpdateTrackAsync(
             track,
             force: true,
-            minimumPriority: _onlineLyrics.Priority);
+            minimumPriority: minimumPriority);
         CurrentLyric = _lyrics.GetDisplayLine(_latestPosition);
     }
 
@@ -105,6 +114,28 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public void AdjustLyricsOffset(TimeSpan delta) => _lyrics.AdjustOffset(delta);
 
     public void ResetLyricsOffset() => _lyrics.ResetOffset();
+
+    public async Task ToggleCurrentPlayerWindowAsync(IntPtr previousForegroundWindow)
+    {
+        var snapshot = _media.Current;
+        if (!snapshot.HasSession || string.IsNullOrWhiteSpace(snapshot.SourceAppId))
+        {
+            return;
+        }
+
+        if (_playerWindowToggle.TryToggle(snapshot.SourceAppId, previousForegroundWindow))
+        {
+            return;
+        }
+
+        var playerId = PlayerWindowToggleService.GetPlayerId(snapshot.SourceAppId);
+        var installedPlayer = InstalledPlayers.FirstOrDefault(player =>
+            string.Equals(player.Id, playerId, StringComparison.OrdinalIgnoreCase));
+        if (installedPlayer is not null)
+        {
+            await _playerLauncher.LaunchAsync(installedPlayer);
+        }
+    }
 
     private async Task LaunchPlayerAsync(InstalledMusicPlayer? player)
     {
@@ -174,9 +205,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         var normalized = source.ToLowerInvariant();
         if (normalized.Contains("spotify")) return "Spotify";
         if (normalized.Contains("applemusic") || normalized.Contains("apple music")) return "Apple Music";
-        if (normalized.Contains("cloudmusic") || normalized.Contains("netease")) return "网易云音乐";
-        if (normalized.Contains("qqmusic")) return "QQ音乐";
-        if (normalized.Contains("douyin") || normalized.Contains("qishui")) return "汽水音乐";
+        if (normalized.Contains("cloudmusic") || normalized.Contains("netease") ||
+            normalized.Contains("网易云音乐")) return "网易云音乐";
+        if (normalized.Contains("qqmusic") || normalized.Contains("qq音乐")) return "QQ音乐";
+        if (normalized.Contains("sodamusic") || normalized.Contains("douyin") ||
+            normalized.Contains("qishui") || normalized.Contains("luna") ||
+            normalized.Contains("汽水音乐")) return "汽水音乐";
         if (normalized.Contains("chrome")) return "Chrome";
         if (normalized.Contains("msedge")) return "Edge";
         return string.IsNullOrWhiteSpace(source) ? "系统媒体" : source.Split('!')[0];

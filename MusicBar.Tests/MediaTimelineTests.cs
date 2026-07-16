@@ -124,13 +124,42 @@ public sealed class MediaTimelineTests
 
     [Theory]
     [InlineData("cloudmusic.exe", "cloudmusic")]
+    [InlineData("网易云音乐", "cloudmusic")]
     [InlineData("QQMusic.exe", "QQMusic")]
+    [InlineData("QQ音乐", "QQMusic")]
+    [InlineData("SodaMusic.exe", "SodaMusic")]
+    [InlineData("com.luna.music", "SodaMusic")]
+    [InlineData("汽水音乐", "SodaMusic")]
     [InlineData("SpotifyAB.SpotifyMusic_xyz!Spotify", "Spotify")]
+    [InlineData("AppleInc.AppleMusic_xyz!App", "AppleMusic")]
     [InlineData("chrome.exe", null)]
     public void KnownPlayerProcessMapping_DoesNotTreatBrowsersAsDesktopPlayers(
         string sourceAppId,
         string? expected)
     {
         Assert.Equal(expected, MediaSessionService.GetKnownPlayerProcessName(sourceAppId));
+    }
+
+    [Theory]
+    [InlineData("cloudmusic.exe", true)]
+    [InlineData("网易云音乐", true)]
+    [InlineData("QQMusic.exe", true)]
+    [InlineData("QQ音乐", true)]
+    [InlineData("SodaMusic.exe", true)]
+    [InlineData("汽水音乐", true)]
+    [InlineData("SpotifyAB.SpotifyMusic_xyz!Spotify", true)]
+    [InlineData("AppleInc.AppleMusic_xyz!App", true)]
+    [InlineData("chrome.exe", false)]
+    [InlineData("msedge.exe", false)]
+    [InlineData("firefox.exe", false)]
+    [InlineData("vlc.exe", false)]
+    [InlineData("Zoom.exe", false)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void SupportedMusicSourceUsesExplicitDesktopPlayerAllowlist(
+        string? sourceAppId,
+        bool expected)
+    {
+        Assert.Equal(expected, MediaSessionService.IsSupportedMusicSource(sourceAppId));
     }
 }

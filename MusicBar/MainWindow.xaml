@@ -15,7 +15,9 @@
         Topmost="True"
         Loaded="OnLoaded"
         SourceInitialized="OnSourceInitialized"
-        MouseLeftButtonDown="OnMouseLeftButtonDown">
+        MouseLeftButtonDown="OnMouseLeftButtonDown"
+        MouseMove="OnMouseMove"
+        MouseLeftButtonUp="OnMouseLeftButtonUp">
     <Window.Resources>
         <Style x:Key="ControlButton" TargetType="Button">
             <Setter Property="Width" Value="36" />
@@ -89,7 +91,9 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <Grid Grid.ColumnSpan="2">
+            <Grid x:Name="MediaInfoPanel" Grid.ColumnSpan="2" Background="Transparent"
+                  Cursor="Hand" ToolTip="双击显示或收起播放器"
+                  PreviewMouseLeftButtonDown="OnMediaInfoMouseLeftButtonDown">
                 <Grid.Style>
                     <Style TargetType="Grid">
                         <Setter Property="Visibility" Value="Collapsed" />

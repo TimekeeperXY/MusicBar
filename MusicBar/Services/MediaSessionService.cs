@@ -88,15 +88,11 @@ public sealed class MediaSessionService : IDisposable
             return;
         }
 
-        var next = _manager.GetCurrentSession();
-        if (next is null)
-        {
-            var sessions = _manager.GetSessions();
-            next = sessions
-                .FirstOrDefault(candidate => candidate.GetPlaybackInfo().PlaybackStatus ==
-                    GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing)
-                ?? sessions.FirstOrDefault();
-        }
+        var current = _manager.GetCurrentSession();
+        var sessions = _manager.GetSessions()
+            .Where(candidate => IsSupportedMusicSource(candidate.SourceAppUserModelId))
+            .ToList();
+        var next = SelectBestSupportedSession(sessions, current, _session);
 
         if (next is null)
         {
@@ -252,13 +248,58 @@ public sealed class MediaSessionService : IDisposable
     internal static string? GetKnownPlayerProcessName(string? sourceAppId)
     {
         var source = sourceAppId?.ToLowerInvariant() ?? string.Empty;
-        if (source.Contains("cloudmusic") || source.Contains("netease")) return "cloudmusic";
-        if (source.Contains("qqmusic")) return "QQMusic";
-        if (source.Contains("sodamusic") || source.Contains("qishui")) return "SodaMusic";
+        if (source.Contains("cloudmusic") || source.Contains("netease") ||
+            source.Contains("网易云音乐")) return "cloudmusic";
+        if (source.Contains("qqmusic") || source.Contains("qq音乐")) return "QQMusic";
+        if (source.Contains("sodamusic") || source.Contains("qishui") ||
+            source.Contains("douyin") || source.Contains("luna") ||
+            source.Contains("汽水音乐")) return "SodaMusic";
         if (source.Contains("spotify")) return "Spotify";
         if (source.Contains("applemusic") || source.Contains("apple music")) return "AppleMusic";
         return null;
     }
+
+    internal static bool IsSupportedMusicSource(string? sourceAppId) =>
+        GetKnownPlayerProcessName(sourceAppId) is not null;
+
+    private static GlobalSystemMediaTransportControlsSession? SelectBestSupportedSession(
+        IReadOnlyList<GlobalSystemMediaTransportControlsSession> sessions,
+        GlobalSystemMediaTransportControlsSession? current,
+        GlobalSystemMediaTransportControlsSession? attached)
+    {
+        var currentCandidate = FindMatchingSession(sessions, current);
+        if (currentCandidate is not null &&
+            currentCandidate.GetPlaybackInfo().PlaybackStatus ==
+                GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing)
+        {
+            return currentCandidate;
+        }
+
+        var playing = sessions.FirstOrDefault(candidate =>
+            candidate.GetPlaybackInfo().PlaybackStatus ==
+                GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing);
+        if (playing is not null)
+        {
+            return playing;
+        }
+
+        var attachedCandidate = FindMatchingSession(sessions, attached);
+        if (attachedCandidate is not null)
+        {
+            return attachedCandidate;
+        }
+
+        return currentCandidate ?? sessions.FirstOrDefault();
+    }
+
+    private static GlobalSystemMediaTransportControlsSession? FindMatchingSession(
+        IReadOnlyList<GlobalSystemMediaTransportControlsSession> sessions,
+        GlobalSystemMediaTransportControlsSession? target) =>
+        target is null
+            ? null
+            : sessions.FirstOrDefault(candidate =>
+                string.Equals(candidate.SourceAppUserModelId, target.SourceAppUserModelId,
+                    StringComparison.OrdinalIgnoreCase));
 
     private async Task<bool> TryPublishNeteaseProgressAsync()
     {

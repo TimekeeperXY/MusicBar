@@ -1,5 +1,5 @@
 #define MyAppName "MusicBar"
-#define MyAppVersion "0.2.0-alpha.14"
+#define MyAppVersion "1.0.0"
 #define MyAppExeName "MusicBar.exe"
 
 [Setup]
@@ -28,7 +28,7 @@ VersionInfoCompany=MusicBar
 VersionInfoDescription=MusicBar 安装程序
 VersionInfoProductName={#MyAppName}
 VersionInfoProductTextVersion={#MyAppVersion}
-VersionInfoVersion=0.2.0.14
+VersionInfoVersion=1.0.0.0
 VersionInfoTextVersion={#MyAppVersion}
 VersionInfoOriginalFileName=MusicBar-Setup.exe
 UsePreviousAppDir=yes

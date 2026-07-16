@@ -78,6 +78,7 @@ internal sealed class LyricsDiskCache
             Album = track.Album,
             DurationMilliseconds = checked((long)Math.Round(track.Duration.TotalMilliseconds)),
             Source = document.Source,
+            SourceKind = document.SourceKind,
             MatchConfidence = document.MatchConfidence,
             Lines = document.Lines.Select(line => new CacheLine
             {
@@ -162,7 +163,7 @@ internal sealed class LyricsDiskCache
 
         return new LyricsDocument(
             string.IsNullOrWhiteSpace(entry.Source) ? "在线歌词缓存" : entry.Source,
-            LyricsSourceKind.Online,
+            entry.SourceKind ?? LyricsSourceKind.Online,
             lines,
             Math.Clamp(entry.MatchConfidence, 0, 1));
     }
@@ -176,6 +177,7 @@ internal sealed class LyricsDiskCache
         public string? Album { get; init; }
         public long DurationMilliseconds { get; init; }
         public string Source { get; init; } = string.Empty;
+        public LyricsSourceKind? SourceKind { get; init; }
         public double MatchConfidence { get; init; }
         public CacheLine[] Lines { get; init; } = [];
     }

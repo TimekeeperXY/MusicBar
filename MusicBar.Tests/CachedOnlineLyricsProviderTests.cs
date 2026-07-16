@@ -110,6 +110,35 @@ public sealed class CachedOnlineLyricsProviderTests
         }
     }
 
+    [Fact]
+    public async Task CachePreservesNativePlayerSourceKind()
+    {
+        var directory = CreateTemporaryDirectory();
+        try
+        {
+            var track = Track();
+            var cache = new LyricsDiskCache(directory);
+            await cache.StoreAsync(
+                track,
+                Document() with
+                {
+                    Source = "QQ音乐 #test",
+                    SourceKind = LyricsSourceKind.NativePlayer
+                },
+                CancellationToken.None);
+
+            var result = await cache.TryGetAsync(track, CancellationToken.None);
+
+            Assert.NotNull(result);
+            Assert.Equal(LyricsSourceKind.NativePlayer, result.SourceKind);
+            Assert.Equal("QQ音乐 #test", result.Source);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     private static string CreateTemporaryDirectory() => Path.Combine(
         Path.GetTempPath(), $"musicbar-cache-tests-{Guid.NewGuid():N}");
 

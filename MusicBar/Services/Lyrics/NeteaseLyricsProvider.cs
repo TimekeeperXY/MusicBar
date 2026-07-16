@@ -171,7 +171,7 @@ public sealed class NeteaseLyricsProvider : ILyricsProvider
             BaseAddress = new Uri("https://music.163.com/"),
             Timeout = TimeSpan.FromSeconds(5)
         };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 MusicBar/0.2.0-alpha");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 MusicBar/1.0.0");
         client.DefaultRequestHeaders.Referrer = new Uri("https://music.163.com/");
         return client;
     }

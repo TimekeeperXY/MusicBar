@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 
 namespace MusicBar;
@@ -25,11 +26,20 @@ public partial class MainWindow : Window
     private readonly MainViewModel _viewModel = new();
     private readonly SystemThemeService _themeService = new();
     private readonly DispatcherTimer _zOrderTimer = new() { Interval = TimeSpan.FromMilliseconds(750) };
+    private readonly WinEventDelegate _foregroundChangedCallback;
     private HwndSource? _windowSource;
+    private IntPtr _windowHandle;
+    private IntPtr _foregroundHook;
+    private IntPtr _lastExternalForegroundWindow;
+    private Point _dragStartPoint;
+    private bool _dragPending;
+    private bool _playerWindowToggleInProgress;
+    private long _lastPlayerWindowToggleAt;
     private int _taskbarCreatedMessage;
 
     public MainWindow()
     {
+        _foregroundChangedCallback = OnForegroundWindowChanged;
         InitializeComponent();
         DataContext = _viewModel;
         _themeService.SystemAppearanceChanged += OnSystemAppearanceChanged;
@@ -61,12 +71,16 @@ public partial class MainWindow : Window
 
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
-        var handle = new WindowInteropHelper(this).Handle;
-        var style = GetWindowLongPtr(handle, GwlExStyle).ToInt64();
-        SetWindowLongPtr(handle, GwlExStyle, new IntPtr(style | WsExToolWindow));
+        _windowHandle = new WindowInteropHelper(this).Handle;
+        var style = GetWindowLongPtr(_windowHandle, GwlExStyle).ToInt64();
+        SetWindowLongPtr(_windowHandle, GwlExStyle, new IntPtr(style | WsExToolWindow));
         _taskbarCreatedMessage = RegisterWindowMessage("TaskbarCreated");
-        _windowSource = HwndSource.FromHwnd(handle);
+        _windowSource = HwndSource.FromHwnd(_windowHandle);
         _windowSource?.AddHook(WindowMessageHook);
+        _foregroundHook = SetWinEventHook(
+            EventSystemForeground, EventSystemForeground, IntPtr.Zero,
+            _foregroundChangedCallback, 0, 0, WinEventOutOfContext);
+        RememberExternalForeground(GetForegroundWindow());
     }
 
     private void DockToTaskbar()
@@ -82,7 +96,7 @@ public partial class MainWindow : Window
             if (taskbarWidth >= taskbarHeight)
             {
                 Height = Math.Clamp(taskbarHeight, 40, 64);
-                Width = Math.Clamp(Math.Min(560, taskbarWidth - 16), MinWidth, MaxWidth);
+                Width = Math.Clamp(Math.Min(484, taskbarWidth - 16), MinWidth, MaxWidth);
                 Left = (bounds.Left * scale) + 8;
                 Top = bounds.Top * scale;
                 Dispatcher.BeginInvoke(KeepAboveTaskbar, DispatcherPriority.Loaded);
@@ -131,15 +145,103 @@ public partial class MainWindow : Window
 
     private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ButtonState != MouseButtonState.Pressed || IsInsideButton(e.OriginalSource as DependencyObject))
+        if (e.ButtonState != MouseButtonState.Pressed || e.ClickCount > 1 ||
+            IsInsideButton(e.OriginalSource as DependencyObject))
         {
             return;
         }
 
-        DragMove();
+        _dragStartPoint = e.GetPosition(this);
+        _dragPending = true;
+        CaptureMouse();
     }
 
-    private static bool IsInsideButton(DependencyObject? element)
+    private void OnMouseMove(object sender, MouseEventArgs e)
+    {
+        if (!_dragPending || e.LeftButton != MouseButtonState.Pressed)
+        {
+            return;
+        }
+
+        var position = e.GetPosition(this);
+        if (Math.Abs(position.X - _dragStartPoint.X) < SystemParameters.MinimumHorizontalDragDistance &&
+            Math.Abs(position.Y - _dragStartPoint.Y) < SystemParameters.MinimumVerticalDragDistance)
+        {
+            return;
+        }
+
+        CancelPendingDrag();
+        try
+        {
+            DragMove();
+        }
+        catch (InvalidOperationException)
+        {
+            // The mouse can be released between the threshold check and DragMove.
+        }
+    }
+
+    private void OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e) => CancelPendingDrag();
+
+    private async void OnMediaInfoMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton != MouseButton.Left || e.ClickCount != 2 || !_viewModel.HasMediaSession)
+        {
+            return;
+        }
+
+        e.Handled = true;
+        CancelPendingDrag();
+        var now = Environment.TickCount64;
+        if (_playerWindowToggleInProgress || now - _lastPlayerWindowToggleAt < 600)
+        {
+            return;
+        }
+
+        _playerWindowToggleInProgress = true;
+        try
+        {
+            await _viewModel.ToggleCurrentPlayerWindowAsync(_lastExternalForegroundWindow);
+        }
+        catch
+        {
+            // A player can exit while its window is being restored; the next double-click retries.
+        }
+        finally
+        {
+            _lastPlayerWindowToggleAt = Environment.TickCount64;
+            _playerWindowToggleInProgress = false;
+        }
+    }
+
+    private void CancelPendingDrag()
+    {
+        _dragPending = false;
+        if (IsMouseCaptured)
+        {
+            ReleaseMouseCapture();
+        }
+    }
+
+    private void OnForegroundWindowChanged(
+        IntPtr hook, uint eventType, IntPtr window, int objectId, int childId,
+        uint eventThread, uint eventTime) => RememberExternalForeground(window);
+
+    private void RememberExternalForeground(IntPtr window)
+    {
+        if (window == IntPtr.Zero || window == _windowHandle)
+        {
+            return;
+        }
+
+        GetWindowThreadProcessId(window, out var processId);
+        if (processId != (uint)Environment.ProcessId)
+        {
+            _lastExternalForegroundWindow = window;
+        }
+    }
+
+    internal static bool IsInsideButton(DependencyObject? element)
     {
         while (element is not null)
         {
@@ -147,7 +249,14 @@ public partial class MainWindow : Window
             {
                 return true;
             }
-            element = VisualTreeHelper.GetParent(element);
+
+            element = element switch
+            {
+                Visual or Visual3D => VisualTreeHelper.GetParent(element),
+                ContentElement content => ContentOperations.GetParent(content) ??
+                    (content as FrameworkContentElement)?.Parent,
+                _ => LogicalTreeHelper.GetParent(element)
+            };
         }
         return false;
     }
@@ -228,6 +337,11 @@ public partial class MainWindow : Window
         _zOrderTimer.Tick -= OnZOrderTimerTick;
         Deactivated -= OnWindowDeactivated;
         _windowSource?.RemoveHook(WindowMessageHook);
+        if (_foregroundHook != IntPtr.Zero)
+        {
+            UnhookWinEvent(_foregroundHook);
+            _foregroundHook = IntPtr.Zero;
+        }
         _themeService.SystemAppearanceChanged -= OnSystemAppearanceChanged;
         _themeService.Dispose();
         _viewModel.Dispose();
@@ -257,6 +371,28 @@ public partial class MainWindow : Window
 
     [DllImport("user32.dll")]
     private static extern uint GetDpiForWindow(IntPtr hWnd);
+
+    private const uint EventSystemForeground = 0x0003;
+    private const uint WinEventOutOfContext = 0x0000;
+
+    private delegate void WinEventDelegate(
+        IntPtr hook, uint eventType, IntPtr window, int objectId, int childId,
+        uint eventThread, uint eventTime);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SetWinEventHook(
+        uint eventMin, uint eventMax, IntPtr eventHookModule, WinEventDelegate callback,
+        uint processId, uint threadId, uint flags);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool UnhookWinEvent(IntPtr hook);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct Rect
