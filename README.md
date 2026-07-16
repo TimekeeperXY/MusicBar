@@ -2,7 +2,7 @@
 
 MusicBar 是一个贴靠 Windows 任务栏的开源音乐快捷播控工具。它优先通过 Windows 全局媒体会话识别当前播放器，并为部分播放器提供本地适配能力。
 
-产品介绍页位于 [`docs/index.html`](docs/index.html)，可以直接用于 GitHub Pages。
+产品介绍页：[https://timekeeperxy.github.io/MusicBar/](https://timekeeperxy.github.io/MusicBar/)
 
 ## 功能
 
